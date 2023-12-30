@@ -64,8 +64,6 @@ int add(const char *path)
 	if (r < 0) {
 		if (in != stdin)
 			fclose(in);
-		if (p1)
-			free(p1);
 		err_die(1, "%d:%s:", errno, strerror(errno));
 	}
 
@@ -75,10 +73,8 @@ int add(const char *path)
 	if (r < 0) {
 		if (in != stdin)
 			fclose(in);
-		if (p2)
+		if (p1)
 			free(p1);
-		if (p2)
-			free(p2);
 		err_die(1, "%d:%s:", errno, strerror(errno));
 	}
 
