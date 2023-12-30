@@ -103,22 +103,22 @@ int main(int argc, char *argv[])
 	if (!strcmp("help", *argv)) {
 		print_usage();
 	} else if (!strcmp("init", *argv)) {
-		if (!argv[1])
+		if (argc != 2)
 			err_die(1, "invalid usage, try pass help");
 
 		r = pass_init(argv[1]);
 	} else if (!strcmp("cat", *argv)) {
-		if (!argv[1])
+		if (argc != 2)
 			err_die(1, "invalid usage, try pass help");
 
 		r = cat(argv[1]);
 	} else if (!strcmp("add", *argv)) {
-		if (!argv[1])
+		if (argc != 2)
 			err_die(1, "invalid usage, try pass help");
 
 		r = add(argv[1]);
 	} else if (!strcmp("rm", *argv)) {
-		if (!argv[1])
+		if (argc != 2)
 			err_die(1, "invalid usage, try pass help");
 
 		r = pass_rm(argv[1]);
