@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -36,10 +37,15 @@ int cat(const char *path)
 	const char *s = NULL;
 
 	s = pass_cat(path);
-	if (s)
+	if (!s)
+		return -1;
+
+	if(isatty(STDOUT_FILENO))
+		puts(s);
+	else
 		fputs(s, stdout);
 
-	return  (s == NULL);
+	return  0;
 }
 
 int add(const char *path)
