@@ -11,6 +11,7 @@
 }
 
 int r_mkdir(const char *path, mode_t mode);
+void util_strtrim(char *s);
 
 #define UTIL_H
 #endif

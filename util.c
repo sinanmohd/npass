@@ -2,6 +2,7 @@
 #include <string.h>
 #include <errno.h>
 #include <linux/limits.h>
+#include <ctype.h>
 
 #include "util.h"
 
@@ -30,4 +31,15 @@ int r_mkdir(const char *path, mode_t mode)
 	}
 
 	return mkdir(path, mode);
+}
+
+void util_strtrim(char *s)
+{
+	char *rend;
+
+	for (rend = s; *s; ++s)
+		if (!isspace(*s))
+			rend = s;
+
+	rend[1] = '\0';
 }

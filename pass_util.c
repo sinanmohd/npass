@@ -145,6 +145,7 @@ int pass_add(const char *path, const char *pass, size_t n)
 	if (!rc)
 		err_die(1, "failed to read %s", gpg_id_path);
 	fclose(gpg_id);
+	util_strtrim(fpr);
 
 	r = gpg_key_validate(fpr);
 	if (r)
