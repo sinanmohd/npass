@@ -17,7 +17,6 @@
 #define FPR_MAX		256
 
 static char pass_dir[PATH_MAX] = {0};
-static char pass_out[PASS_MAX] = {0};
 
 int set_pass_dir(void);
 
@@ -82,21 +81,21 @@ int pass_init(const char *fpr)
 	return 0;
 }
 
-const char *pass_cat(const char *path)
+int pass_cat(FILE *out, const char *path)
 {
 	int r;
 	char pass_path[PATH_MAX];
 
 	r = set_pass_dir();
 	if (r)
-		err_die(NULL, "PASSWORD_STORE_DIR not set");
+		err_die(1, "PASSWORD_STORE_DIR not set");
 
 	r = snprintf(pass_path, sizeof(pass_path), "%s/%s.gpg", pass_dir, path);
 	if (r >= (int) sizeof(pass_path))
-		err_die(NULL, "path exceeded PATH_MAX");
+		err_die(1, "path exceeded PATH_MAX");
 
-	r = gpg_decrypt(pass_path, pass_out, sizeof(pass_out));
-	return r ? NULL : pass_out;
+	r = gpg_decrypt(out, pass_path);
+	return r;
 }
 
 ssize_t pass_getpass(char **lineptr, size_t *n, FILE *stream)

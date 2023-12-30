@@ -64,9 +64,10 @@ int gpg_key_validate(const char *fpr)
 	return 0;
 }
 
-int gpg_decrypt(const char *path, char *pass_out, size_t n)
+int gpg_decrypt(FILE *pass_out, const char *pass_path)
 {
 	int r;
+	char buf[BUFSIZ];
 	gpgme_data_t in, out;
 	gpgme_error_t err;
 
@@ -74,7 +75,7 @@ int gpg_decrypt(const char *path, char *pass_out, size_t n)
 	if (r)
 		return r;
 
-	err = gpgme_data_new_from_file(&in, path, 1);
+	err = gpgme_data_new_from_file(&in, pass_path, 1);
 	fail_if_err(err);
 	err = gpgme_data_new(&out);
 	fail_if_err(err);
@@ -84,13 +85,13 @@ int gpg_decrypt(const char *path, char *pass_out, size_t n)
 	r = gpgme_data_seek(out, 0, SEEK_SET);
 	if (r)
 		fail_if_err (gpgme_err_code_from_errno(errno));
-	r = gpgme_data_read(out, pass_out, n);
-	gpg_cleanup();
+
+	while ((r = gpgme_data_read(out, buf, sizeof(buf))))
+		fwrite(buf, r, 1, pass_out);
 	if (r < 0)
 		fail_if_err(gpgme_err_code_from_errno(errno));
-	// if (r) // TODO: upstream: did not return 0 despite eob
-	// 	err_die(r, "did not reach end of object");
 
+	gpg_cleanup();
 	return 0;
 }
 
@@ -119,7 +120,7 @@ int gpg_encrypt(FILE *stream, const char *fpr, const char *pass, size_t n)
 	if (r)
 		fail_if_err (gpgme_err_code_from_errno(errno));
 
-	while ((r = gpgme_data_read(out, buf, BUFSIZ)))
+	while ((r = gpgme_data_read(out, buf, sizeof(buf))))
 		fwrite(buf, r, 1, stream);
 	gpg_cleanup();
 	if (r < 0)

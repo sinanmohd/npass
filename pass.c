@@ -34,18 +34,13 @@ void print_usage(void)
 
 int cat(const char *path)
 {
-	const char *s = NULL;
+	int r;
 
-	s = pass_cat(path);
-	if (!s)
-		return -1;
+	r = pass_cat(stdout, path);
+	if (!r && isatty(STDOUT_FILENO))
+		putchar('\n');
 
-	if(isatty(STDOUT_FILENO))
-		puts(s);
-	else
-		fputs(s, stdout);
-
-	return  0;
+	return  r;
 }
 
 int add(const char *path)
@@ -80,9 +75,6 @@ int add(const char *path)
 
 	if (in != stdin)
 		fclose(in);
-
-	if (n > PASS_MAX - 1) /* TODO: get rid of the limit */
-		err_die(1, "password must not exceed %d characters", PASS_MAX);
 
 	if (strcmp(p1, p2)) {
 		free(p1);
