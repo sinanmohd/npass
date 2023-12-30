@@ -4,6 +4,8 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <linux/limits.h>
+#include <termios.h>
+#include <stdio.h>
 
 #include "pass_util.h"
 #include "util.h"
@@ -112,4 +114,25 @@ const char *pass_cat(const char *path)
 
 	r = gpg_decrypt(fpr, pass_path, pass_out, sizeof(pass_out));
 	return r ? NULL : pass_out;
+}
+
+size_t pass_getpass(char **lineptr, size_t *n, FILE *stream)
+{
+	int r;
+	struct termios new, old;
+
+	r = tcgetattr(fileno(stream), &old);
+	if (r)
+		return -1;
+
+	new = old;
+	new.c_lflag &= ~ECHO;
+	r = tcsetattr(fileno(stream), TCSAFLUSH, &new);
+	if (r)
+		return -1;
+
+	r = getline (lineptr, n, stream);
+	(void) tcsetattr (fileno (stream), TCSAFLUSH, &old);
+
+	return r;
 }
