@@ -149,7 +149,7 @@ int pass_add(const char *path, const char *pass, size_t n)
 
 	r = gpg_key_validate(fpr);
 	if (r)
-		err_die(1, "key not usable, try gpg --list-keys");
+		err_die(1, "invalid key , try gpg --list-keys");
 
 	r = snprintf(pass_path, sizeof(pass_path), "%s/%s.gpg", pass_dir, path);
 	if (r > (int) sizeof(gpg_id_path))
