@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <errno.h>
 #include <locale.h>
 
 #include <gpgme.h>
 
 #include "gpg.h"
+#include "util.h"
 
 #define fail_if_err(err) \
 	if (err) { \
@@ -59,6 +61,38 @@ int gpg_key_validate(const char *fpr)
 	fail_if_err(err);
 
 	gpg_cleanup();
+	return 0;
+}
+
+int gpg_decrypt(const char *fpr, const char *path, char *pass_out, size_t n)
+{
+	int r;
+	gpgme_data_t in, out;
+	gpgme_error_t err;
+
+	r = gpg_init();
+	if (r)
+		return r;
+
+	err = gpgme_get_key(ctx, fpr, &key, 1);
+	fail_if_err(err);
+
+	err = gpgme_data_new_from_file(&in, path, 1);
+	fail_if_err(err);
+	err = gpgme_data_new(&out);
+	fail_if_err(err);
+	err = gpgme_op_decrypt(ctx, in, out);
+	fail_if_err(err);
+
+	r = gpgme_data_seek(out, 0, SEEK_SET);
+	if (r)
+		fail_if_err (gpgme_err_code_from_errno(errno));
+	r = gpgme_data_read(out, pass_out, n);
+	gpg_cleanup();
+	if (r < 0)
+		fail_if_err(gpgme_err_code_from_errno(errno));
+	// if (r) // TODO: upstream: did not return 0 despite eob
+	// 	err_die(r, "did not reach end of object");
 
 	return 0;
 }

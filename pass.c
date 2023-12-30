@@ -31,6 +31,7 @@ void print_usage(void)
 int main(int argc, char *argv[])
 {
 	int r = 0;
+	const char *s = NULL;
 
 	if (!--argc) {
 		print_usage();
@@ -43,9 +44,17 @@ int main(int argc, char *argv[])
 		print_usage();
 	} else if (!strcmp("init", *argv)) {
 		if (!argv[1])
-			err_die("invalid usage, try pass help");
+			err_die(1, "invalid usage, try pass help");
 
 		r = pass_init(argv[1]);
+	} else if (!strcmp("cat", *argv)) {
+		if (!argv[1])
+			err_die(1, "invalid usage, try pass help");
+
+		s = pass_cat(argv[1]);
+		r = !(s == NULL);
+		if (s)
+			fputs(s, stdout);
 	}
 
 	return r;
