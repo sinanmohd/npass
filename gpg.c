@@ -64,7 +64,7 @@ int gpg_key_validate(const char *fpr)
 	return 0;
 }
 
-int gpg_decrypt(const char *fpr, const char *path, char *pass_out, size_t n)
+int gpg_decrypt(const char *path, char *pass_out, size_t n)
 {
 	int r;
 	gpgme_data_t in, out;
@@ -73,9 +73,6 @@ int gpg_decrypt(const char *fpr, const char *path, char *pass_out, size_t n)
 	r = gpg_init();
 	if (r)
 		return r;
-
-	err = gpgme_get_key(ctx, fpr, &key, 1);
-	fail_if_err(err);
 
 	err = gpgme_data_new_from_file(&in, path, 1);
 	fail_if_err(err);
