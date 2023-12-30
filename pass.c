@@ -123,10 +123,12 @@ int main(int argc, char *argv[])
 			err_die(1, "invalid usage, try pass help");
 
 		r = add(argv[1]);
+	} else {
+		r = cat(*argv);
 	}
 
 	if (r)
-		err_die(r, "Command '%s' failed", *argv);
+		err_die(r, "Command failed");
 
 	return 0;
 }
