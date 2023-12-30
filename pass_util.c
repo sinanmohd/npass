@@ -99,9 +99,9 @@ const char *pass_cat(const char *path)
 	return r ? NULL : pass_out;
 }
 
-size_t pass_getpass(char **lineptr, size_t *n, FILE *stream)
+ssize_t pass_getpass(char **lineptr, size_t *n, FILE *stream)
 {
-	int r;
+	ssize_t r;
 	struct termios new, old;
 
 	r = tcgetattr(fileno(stream), &old);
