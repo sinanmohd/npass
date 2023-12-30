@@ -6,6 +6,7 @@
 #include "util.h"
 
 void print_usage(void);
+int cat(const char *path);
 
 void print_usage(void)
 {
@@ -28,10 +29,20 @@ void print_usage(void)
 	       "	Show this help\n");
 }
 
+int cat(const char *path)
+{
+	const char *s = NULL;
+
+	s = pass_cat(path);
+	if (s)
+		fputs(s, stdout);
+
+	return  (s == NULL);
+}
+
 int main(int argc, char *argv[])
 {
 	int r = 0;
-	const char *s = NULL;
 
 	if (!--argc) {
 		print_usage();
@@ -51,10 +62,7 @@ int main(int argc, char *argv[])
 		if (!argv[1])
 			err_die(1, "invalid usage, try pass help");
 
-		s = pass_cat(argv[1]);
-		r = !(s == NULL);
-		if (s)
-			fputs(s, stdout);
+		r = cat(argv[1]);
 	}
 
 	return r;
