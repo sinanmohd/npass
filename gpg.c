@@ -96,3 +96,37 @@ int gpg_decrypt(const char *fpr, const char *path, char *pass_out, size_t n)
 
 	return 0;
 }
+
+int gpg_encrypt(FILE *stream, const char *fpr, const char *pass, size_t n)
+{
+	int r;
+	char buf[BUFSIZ];
+	gpgme_data_t in, out;
+	gpgme_error_t err;
+
+	r = gpg_init();
+	if (r)
+		return r;
+
+	err = gpgme_get_key(ctx, fpr, &key, 1);
+	fail_if_err(err);
+
+	err = gpgme_data_new_from_mem(&in, pass, n, 0);
+	fail_if_err(err);
+	err = gpgme_data_new(&out);
+	fail_if_err(err);
+	err = gpgme_op_encrypt(ctx, &key, GPGME_ENCRYPT_ALWAYS_TRUST, in, out);
+	fail_if_err(err);
+
+	r = gpgme_data_seek(out, 0, SEEK_SET);
+	if (r)
+		fail_if_err (gpgme_err_code_from_errno(errno));
+
+	while ((r = gpgme_data_read(out, buf, BUFSIZ)))
+		fwrite(buf, r, 1, stream);
+	gpg_cleanup();
+	if (r < 0)
+		fail_if_err(gpgme_err_code_from_errno(errno));
+
+	return 0;
+}

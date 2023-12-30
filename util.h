@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #define err_die(r, ...) {\
-	fprintf(stderr, "err: %s:%d: ", __FILE__, __LINE__); \
+	fprintf(stderr, "%s:%d: ", __FILE__, __LINE__); \
 	fprintf(stderr, __VA_ARGS__); \
 	fputc('\n', stderr); \
 	return r; \

@@ -3,7 +3,9 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <linux/limits.h>
+#include <libgen.h>
 #include <termios.h>
 #include <stdio.h>
 
@@ -11,7 +13,8 @@
 #include "util.h"
 #include "gpg.h"
 
-#define DEF_PASS_DIR "pass"
+#define DEF_PASS_DIR	"pass"
+#define FPR_MAX		256
 
 static char pass_dir[PATH_MAX] = {0};
 static char pass_out[PASS_MAX] = {0};
@@ -132,7 +135,62 @@ size_t pass_getpass(char **lineptr, size_t *n, FILE *stream)
 		return -1;
 
 	r = getline (lineptr, n, stream);
+	if (r > 0 && (*lineptr)[r - 1] == '\n')
+		(*lineptr)[r - 1] = '\0';
+
 	(void) tcsetattr (fileno (stream), TCSAFLUSH, &old);
 
+	return r;
+}
+
+int pass_add(const char *path, const char *pass, size_t n)
+{
+	int r;
+	char *rc;
+	FILE *gpg_id, *out_stream;
+	char gpg_id_path[PATH_MAX], fpr[FPR_MAX], pass_path[PATH_MAX];
+
+	r = set_pass_dir();
+	if (r)
+		err_die(1, "PASSWORD_STORE_DIR not set");
+
+	r = snprintf(gpg_id_path, sizeof(gpg_id_path), "%s/%s", pass_dir, ".gpg-id");
+	if (r > (int) sizeof(gpg_id_path))
+		err_die(1, "path exceeded PATH_MAX");
+
+	gpg_id = fopen(gpg_id_path, "r");
+	if (!gpg_id)
+		err_die(1, "%s %s", gpg_id_path, strerror(errno));
+
+	rc = fgets(fpr, sizeof(fpr), gpg_id);
+	if (!rc)
+		err_die(1, "failed to read %s", gpg_id_path);
+	fclose(gpg_id);
+
+	r = gpg_key_validate(fpr);
+	if (r)
+		err_die(1, "key not usable, try gpg --list-keys");
+
+	r = snprintf(pass_path, sizeof(pass_path), "%s/%s.gpg", pass_dir, path);
+	if (r > (int) sizeof(gpg_id_path))
+		err_die(1, "path exceeded PATH_MAX");
+
+	rc = strdup(pass_path);
+	if (!rc)
+		err_die(1, "%s", strerror(errno));
+	(void) r_mkdir(dirname(rc), S_IRWXU);
+	free(rc);
+
+	r = access(pass_path, F_OK);
+	if (!(errno & ENOENT))
+		err_die(1, "an entry already exists for %s", path);
+
+	out_stream = fopen(pass_path, "w");
+	if (!out_stream)
+		err_die(1, "%s", strerror(errno));
+
+	r = gpg_encrypt(out_stream, fpr, pass, n);
+
+	fclose(out_stream);
 	return r;
 }
