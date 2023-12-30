@@ -117,6 +117,11 @@ int main(int argc, char *argv[])
 			err_die(1, "invalid usage, try pass help");
 
 		r = add(argv[1]);
+	} else if (!strcmp("rm", *argv)) {
+		if (!argv[1])
+			err_die(1, "invalid usage, try pass help");
+
+		r = pass_rm(argv[1]);
 	} else {
 		r = cat(*argv);
 	}

@@ -3,7 +3,6 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <linux/limits.h>
 #include <libgen.h>
 #include <termios.h>
@@ -151,8 +150,9 @@ int pass_add(const char *path, const char *pass, size_t n)
 	if (r)
 		err_die(1, "invalid key , try gpg --list-keys");
 
+	// TODO: guard against .*\.gpg\.gpg[/$]
 	r = snprintf(pass_path, sizeof(pass_path), "%s/%s.gpg", pass_dir, path);
-	if (r > (int) sizeof(gpg_id_path))
+	if (r > (int) sizeof(pass_path))
 		err_die(1, "path exceeded PATH_MAX");
 
 	rc = strdup(pass_path);
@@ -173,4 +173,30 @@ int pass_add(const char *path, const char *pass, size_t n)
 
 	fclose(out_stream);
 	return r;
+}
+
+int pass_rm(const char *path)
+{
+
+	int r = 0;
+	char gpg_path[PATH_MAX], abs_path[PATH_MAX];
+
+	r = set_pass_dir();
+	if (r)
+		err_die(1, "PASSWORD_STORE_DIR not set");
+
+	r = snprintf(gpg_path, sizeof(gpg_path), "%s.gpg", path);
+	if (r > (int) sizeof(gpg_path))
+		err_die(1, "path exceeded PATH_MAX");
+
+	r = snprintf(abs_path, sizeof(gpg_path), "%s/%s", pass_dir, gpg_path);
+	if (r > (int) sizeof(abs_path))
+		err_die(1, "path exceeded PATH_MAX");
+
+	// TODO: guard against .*\.gpg\.gpg[/$]
+	r = unlink(abs_path);
+	if (r)
+		err_die(1, "%s %s", abs_path, strerror(errno));
+
+	return r_rmdir(pass_dir, dirname(gpg_path));
 }
